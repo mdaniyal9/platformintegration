@@ -56,13 +56,14 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Column(
           children: [
             SizedBox(
-              height: 150,
+              height: 200,
               child: AndroidView(
                 viewType: viewType,
                 layoutDirection: TextDirection.ltr,
                 creationParams: creationParams,
                 creationParamsCodec: const StandardMessageCodec(),
                 onPlatformViewCreated: (id) {
+
                   controller = InteractingAnnotationChartController._(id);
                 },
               ),

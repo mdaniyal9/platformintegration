@@ -1,50 +1,23 @@
 package dev.flutter.example
 
-//import android.content.Context
-//import android.graphics.Color
-//import android.view.View
-//import android.widget.TextView
-//import io.flutter.plugin.platform.PlatformView
-//
-//internal class NativeView(context: Context, id: Int, creationParams: Map<String?, Any?>?) : PlatformView {
-//    private val textView: TextView
-//
-//    override fun getView(): View {
-//        return textView
-//    }
-//
-//    override fun dispose() {}
-//
-//    init {
-//        textView = TextView(context)
-//        textView.textSize = 72f
-//        textView.setBackgroundColor(Color.rgb(255, 255, 255))
-//        textView.text = "Rendered on a native Android view (id: $id)"
-//    }
-//}
-
 
 import android.content.Context
-import android.graphics.Typeface
+import android.graphics.Color
 import android.util.Log
-import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
-import android.view.animation.DecelerateInterpolator
-import com.example.platformintegration.data.DataManager
-import com.example.platformintegration.data.MarketDataService
-import com.example.platformintegration.data.PriceSeries
-import com.scichart.charting.model.dataSeries.OhlcDataSeries
+import com.scichart.charting.model.ChartModifierCollection
+
 import com.scichart.charting.model.dataSeries.XyDataSeries
+import com.scichart.charting.modifiers.GestureModifierBase
 import com.scichart.charting.modifiers.PinchZoomModifier
 import com.scichart.charting.modifiers.RolloverModifier
 import com.scichart.charting.modifiers.ZoomPanModifier
 import com.scichart.charting.visuals.SciChartSurface
-import com.scichart.charting.visuals.annotations.AnnotationCoordinateMode
-import com.scichart.charting.visuals.annotations.AnnotationSurfaceEnum
-import com.scichart.charting.visuals.annotations.HorizontalAnchorPoint
-import com.scichart.charting.visuals.annotations.VerticalAnchorPoint
+import com.scichart.charting.visuals.axes.AutoRange
 import com.scichart.charting.visuals.axes.AxisAlignment
 import com.scichart.charting.visuals.axes.AxisTitleOrientation
+import com.scichart.charting.visuals.axes.NumericAxis
 import com.scichart.charting.visuals.renderableSeries.FastLineRenderableSeries
 import com.scichart.core.framework.UpdateSuspender
 import com.scichart.data.model.DoubleRange
@@ -69,10 +42,15 @@ class NativeView internal constructor(
     PlatformView, MethodCallHandler {
     private val methodChannel: MethodChannel
     var surface: SciChartSurface
-    private var lable = "secondssssss"
+    private var lable = "seconds"
     private var xSeries: ArrayList<Double>? = arrayListOf()
     private var ySeries: ArrayList<Double>? = arrayListOf()
-    override fun getView(): View? {
+
+
+    var x_axis: NumericAxis? =null
+    var y_axis: NumericAxis? =null
+
+    override fun getView(): View {
         return surface
     }
 
@@ -97,27 +75,23 @@ class NativeView internal constructor(
         SciChartBuilder.init(context)
         val sciChartBuilder: SciChartBuilder = SciChartBuilder.instance()
 
-        val fourierSeries = DataManager.getInstance().getFourierSeries(1.0, 0.1, 5000)
-
-        val x_axis= sciChartBuilder.newNumericAxis()
+        x_axis= sciChartBuilder.newNumericAxis()
             .withAxisTitle(lable)
             .build()
 
-        val y_axis = sciChartBuilder.newNumericAxis()
+        y_axis = sciChartBuilder.newNumericAxis()
             .withAxisTitle("mV")
             .withGrowBy(0.1, 0.1)
             .withAxisAlignment(AxisAlignment.Left)
             .withAxisTitleOrientation(AxisTitleOrientation.VerticalFlipped)
             .build()
 
+
         val rSeries1 = FastLineRenderableSeries()
         val dataSeries = XyDataSeries(Double::class.javaObjectType, Double::class.javaObjectType)
         rSeries1.dataSeries =  dataSeries
 
-//        dataSeries.append(fourierSeries.xValues, fourierSeries.yValues)
         dataSeries.append(xSeries, ySeries)
-
-
 
         UpdateSuspender.using(surface)
         {
@@ -125,7 +99,7 @@ class NativeView internal constructor(
             surface.yAxes.add(y_axis)
             surface.renderableSeries.add(rSeries1)
             Collections.addAll(surface.chartModifiers, ZoomPanModifier(), PinchZoomModifier(), RolloverModifier())
-//            surface.chartModifiers.add()
+//            surface.chartModifiers.add(customModifier)
         }
     }
 
