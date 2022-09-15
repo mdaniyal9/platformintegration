@@ -2,26 +2,20 @@ package dev.flutter.example
 
 
 import android.content.Context
-import android.graphics.Color
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
-import com.scichart.charting.model.ChartModifierCollection
+import com.example.platformintegration.DiscreteEcgChart
 
 import com.scichart.charting.model.dataSeries.XyDataSeries
-import com.scichart.charting.modifiers.GestureModifierBase
 import com.scichart.charting.modifiers.PinchZoomModifier
 import com.scichart.charting.modifiers.RolloverModifier
 import com.scichart.charting.modifiers.ZoomPanModifier
 import com.scichart.charting.visuals.SciChartSurface
-import com.scichart.charting.visuals.axes.AutoRange
 import com.scichart.charting.visuals.axes.AxisAlignment
 import com.scichart.charting.visuals.axes.AxisTitleOrientation
 import com.scichart.charting.visuals.axes.NumericAxis
 import com.scichart.charting.visuals.renderableSeries.FastLineRenderableSeries
 import com.scichart.core.framework.UpdateSuspender
-import com.scichart.data.model.DoubleRange
-import com.scichart.drawing.common.SolidPenStyle
 import com.scichart.drawing.utility.ColorUtil
 import com.scichart.extensions.builders.SciChartBuilder
 import io.flutter.plugin.common.BinaryMessenger
@@ -34,10 +28,10 @@ import kotlin.collections.ArrayList
 
 
 class NativeView internal constructor(
-    context: Context,
-    messenger: BinaryMessenger?,
-    id: Int,
-    creationParams: Map<String?, Any?>?
+    private val context: Context,
+    private val messenger: BinaryMessenger?,
+    private val id: Int,
+    private val creationParams: Map<String?, Any?>?
 ) :
     PlatformView, MethodCallHandler {
     private val methodChannel: MethodChannel
@@ -46,9 +40,10 @@ class NativeView internal constructor(
     private var xSeries: ArrayList<Double>? = arrayListOf()
     private var ySeries: ArrayList<Double>? = arrayListOf()
 
+    private var xS: DoubleArray? = null
 
-    var x_axis: NumericAxis? =null
-    var y_axis: NumericAxis? =null
+    var discreteChart: DiscreteEcgChart? = null
+
 
     override fun getView(): View {
         return surface
@@ -65,56 +60,38 @@ class NativeView internal constructor(
         val text = methodCall.arguments as String
         Log.e("TAG", "setText: Text received $text")
         lable = text
+        setGraph()
         result.success(null)
     }
 
-    override fun dispose() {}
-
-
-    private fun initExample(context: Context) {
-        SciChartBuilder.init(context)
-        val sciChartBuilder: SciChartBuilder = SciChartBuilder.instance()
-
-        x_axis= sciChartBuilder.newNumericAxis()
-            .withAxisTitle(lable)
-            .build()
-
-        y_axis = sciChartBuilder.newNumericAxis()
-            .withAxisTitle("mV")
-            .withGrowBy(0.1, 0.1)
-            .withAxisAlignment(AxisAlignment.Left)
-            .withAxisTitleOrientation(AxisTitleOrientation.VerticalFlipped)
-            .build()
-
-
-        val rSeries1 = FastLineRenderableSeries()
-        val dataSeries = XyDataSeries(Double::class.javaObjectType, Double::class.javaObjectType)
-        rSeries1.dataSeries =  dataSeries
-
-        dataSeries.append(xSeries, ySeries)
-
-        UpdateSuspender.using(surface)
-        {
-            surface.xAxes.add(x_axis)
-            surface.yAxes.add(y_axis)
-            surface.renderableSeries.add(rSeries1)
-            Collections.addAll(surface.chartModifiers, ZoomPanModifier(), PinchZoomModifier(), RolloverModifier())
-//            surface.chartModifiers.add(customModifier)
-        }
+    override fun dispose() {
+        Log.e("TAG", "dispose: ")
     }
 
     init {
         methodChannel = MethodChannel(
             messenger!!,
-            "platform-integration_$id"
+            "platform-integration"
         )
         methodChannel.setMethodCallHandler(this)
+        surface = SciChartSurface(context)
+
+        setGraph()
+    }
+
+    private fun setGraph() {
         lable = creationParams!!["lable"].toString()
         xSeries = creationParams["x"] as ArrayList<Double>
+        xS = DoubleArray(xSeries!!.size)
+        for (i in 0 until xSeries!!.size){
+            xS!![i] = xSeries!![i]
+        }
         ySeries = creationParams["y"] as ArrayList<Double>
-        surface = SciChartSurface(context)
-        Log.e("TAG", ": INIT --> $id----> ${creationParams["lable"]}---> $xSeries")
-        initExample(context)
 
+        discreteChart = DiscreteEcgChart(context, surface)
+        discreteChart!!.setupGraph(ColorUtil.LimeGreen,"ECG")
+
+        discreteChart!!.addData(xS!!)
+        Log.e("TAG", ": INIT --> $id----> ${creationParams["lable"]}---> $xSeries")
     }
 }

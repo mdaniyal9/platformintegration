@@ -1,19 +1,31 @@
 package com.example.platformintegration
 
+import android.content.res.Configuration
 import com.scichart.charting.visuals.SciChartSurface
+import com.scichart.extensions.builders.SciChartBuilder
 import dev.flutter.example.NativeViewFactory
 import io.flutter.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.PluginRegistry.Registrar
 
 
 class MainActivity: FlutterActivity() {
+
+    lateinit var mFlutterEngine: FlutterEngine
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        mFlutterEngine = flutterEngine
         setLicense()
+        SciChartBuilder.init(context)
+
         flutterEngine
             .platformViewsController
             .registry
-            .registerViewFactory("<platform-view-type>", NativeViewFactory(flutterEngine.dartExecutor.binaryMessenger))
+            .registerViewFactory("<platform-view-type-p>", NativeViewFactory(flutterEngine.dartExecutor.binaryMessenger))
+//        flutterEngine
+//            .platformViewsController
+//            .registry
+//            .registerViewFactory("<platform-view-type-l>", NativeViewFactory(flutterEngine.dartExecutor.binaryMessenger))
     }
 
     private fun setLicense() {
@@ -22,5 +34,13 @@ class MainActivity: FlutterActivity() {
         } catch (e: Exception) {
             Log.e("SciChart", "Error when setting the license", e)
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        android.util.Log.e("TAG", "onConfigurationChanged: ${resources.configuration.orientation}---> ${mFlutterEngine.platformViewsController.getPlatformViewById(1)}")
+//        mFlutterEngine.platformViewsController.detachFromView()
+//        mFlutterEngine.platformViewsController.attachToView()
     }
 }

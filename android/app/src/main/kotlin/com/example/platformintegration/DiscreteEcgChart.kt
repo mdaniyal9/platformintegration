@@ -1,10 +1,13 @@
 package com.example.platformintegration
 
 
+import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
+import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
@@ -85,6 +88,7 @@ class DiscreteEcgChart(context: Context, private val surface: SciChartSurface) :
     {
         this.layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT)
 
+        series1.acceptsUnsortedData = true
         mContext = context
         configuration()
 
@@ -99,10 +103,10 @@ class DiscreteEcgChart(context: Context, private val surface: SciChartSurface) :
                 dataSource =  DoubleArray(dataSource.size)
                  seconds = 10.0
                 sampleRate = (dataSource.size/seconds).toInt()
-                if (viewOrientation == Configuration.ORIENTATION_LANDSCAPE) numberOfSlots = 6.0 else numberOfSlots = 2.0
+                if (viewOrientation == Configuration.ORIENTATION_LANDSCAPE) numberOfSlots = 5.0 else numberOfSlots = 2.0
                 totalPoints = dataSource.size
-                yMin = -3.0
-                yMax = 3.0
+                yMin = -1.5
+                yMax = 1.5
                 lineThickness = 2.0
                 mType = type
             }
